@@ -165,19 +165,3 @@ if st.sidebar.button("Run Advanced Tool"):
 if st.checkbox("Show Raw Data Table"):
     st.write(filtered_df)
 
-# --- STEP 7: THE CHAT INTERFACE ---
-st.divider()
-st.subheader(f"💬 Chat with your {agent_role}")
-st.info(f"The {agent_role} is initialized with your data. Ask a question below.")
-
-# User Input Box
-user_question = st.chat_input("Ask a question about global employment trends...")
-
-if user_question:
-    with st.chat_message("user"):
-        st.write(user_question)
-    
-    with st.chat_message("assistant"):
-        # This is a placeholder until we connect Gemini tomorrow
-        st.write(f"Hello! I am your {agent_role}. I see you are asking about '{user_question}'.")
-        st.write("Tomorrow, I will be connected to the Gemini API to give you a real-time reasoned answer using your data tools!")
