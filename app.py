@@ -7,7 +7,7 @@ from google import genai  # THE NEW SDK
 st.set_page_config(page_title="BFSI AI Agent", layout="wide")
 
 # --- STEP 1: MODERN AI SETUP ---
-API_KEY = "YOUR_API_KEY_HERE" 
+API_KEY = "AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc" 
 try:
     # New SDK uses a Client object
     client = genai.Client(api_key=API_KEY)
