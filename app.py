@@ -8,7 +8,7 @@ st.set_page_config(page_title="BFSI AI Agent", layout="wide", page_icon="🤖")
 
 # --- STEP 1: RESILIENT AI SETUP (THE MODEL HUNTER) ---
 # 🔑 Replace with your key from: https://aistudio.google.com/
-API_KEY = "YOUR_API_KEY_HERE" 
+API_KEY = "AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc" 
 genai.configure(api_key=API_KEY)
 
 # We try multiple names to bypass the 404 error
