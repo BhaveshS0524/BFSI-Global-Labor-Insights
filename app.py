@@ -8,14 +8,21 @@ st.title("🌍 Global Employment Explorer")
 st.write("Analyze 30+ years of employment data instantly.")
 
 # --- STEP 1: LOAD DATA ---
+# --- STEP 1: LOAD DATA ---
 @st.cache_data
 def load_data():
     # Loading the dataset
     data = pd.read_csv("occupazione.csv")
+    
+    # SENIOR FIX: Remove any hidden spaces from column names
+    data.columns = data.columns.str.strip()
+    
+    # SENIOR FIX: Remove any hidden spaces from the data itself
+    data = data.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+    
     return data
 
 df = load_data()
-
 # --- STEP 2: SIDEBAR & FILTERS ---
 st.sidebar.header("Filter Data")
 
