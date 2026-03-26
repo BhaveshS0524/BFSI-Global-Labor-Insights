@@ -100,33 +100,54 @@ if len(filtered_df) >= 2:
 else:
     st.info("Not enough data points to calculate a trend.")
 
-# --- STEP 5: THE AGENTIC TOOL ---
+# --- STEP 5: THE AGENTIC TOOL (VERSION 2.0) ---
 def get_employment_stats(country, year):
     """
-    Agent-ready tool to fetch specific data points.
+    PROFESSIONAL TOOL: Fetches employment data for an AI Agent.
+    Handles case-sensitivity and provides descriptive feedback.
     """
     try:
-        # Match using the mapped columns
-        result = df[(df[mapping['country_col']] == country) & (df[mapping['year_col']].astype(str) == str(year))]
+        # 1. Standardize Input (Strip spaces and capitalize for matching)
+        target_country = str(country).strip().title()
+        target_year = str(year).strip()
+        
+        # 2. Search using normalized columns
+        # We use .str.title() on the dataframe side to match our input
+        result = df[
+            (df[mapping['country_col']].str.title() == target_country) & 
+            (df[mapping['year_col']].astype(str) == target_year)
+        ]
         
         if not result.empty:
+            # We provide a data-rich sentence for the AI to 'read'
             value = result[mapping['value_col']].iloc[0]
-            return f"✅ SUCCESS: In {year}, the employment rate for {country} was {value}%."
+            return {
+                "status": "success",
+                "data": value,
+                "message": f"In {target_year}, {target_country} had an employment rate of {value}%."
+            }
         else:
-            return f"❓ INFO: No data found for {country} in {year}."
+            # Helpful error for the AI Agent
+            return {
+                "status": "not_found",
+                "message": f"I couldn't find data for {target_country} in {target_year}. Please check the spelling."
+            }
     except Exception as e:
-        return f"❌ ERROR: {e}"
+        return {"status": "error", "message": str(e)}
 
-# Sidebar Tool Test
+# --- Updated Sidebar Test ---
 st.sidebar.divider()
-st.sidebar.subheader("🤖 Agent Tool Test")
-test_country = st.sidebar.text_input("Enter Country:", value=selected_country)
-test_year = st.sidebar.number_input("Enter Year:", min_value=1991, max_value=2025, value=2021)
+st.sidebar.subheader("🤖 Agent Tool Test (v2.0)")
+test_input = st.sidebar.text_input("Ask about a country (e.g. india):", value="india")
+test_yr = st.sidebar.number_input("Year:", min_value=1991, max_value=2025, value=2021)
 
-if st.sidebar.button("Run Tool"):
-    message = get_employment_stats(test_country, test_year)
-    st.sidebar.info(message)
-
+if st.sidebar.button("Run Advanced Tool"):
+    # We call the function and extract the 'message' for the UI
+    response = get_employment_stats(test_input, test_yr)
+    if response["status"] == "success":
+        st.sidebar.success(response["message"])
+    else:
+        st.sidebar.warning(response["message"])
 # 6. Show Raw Data
 if st.checkbox("Show Raw Data Table"):
     st.write(filtered_df)
