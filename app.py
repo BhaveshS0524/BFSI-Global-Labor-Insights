@@ -6,13 +6,20 @@ import plotly.express as px
 st.title("🌍 Global Employment Explorer")
 st.write("Analyze 30+ years of employment data instantly.")
 
-# 2. Load Data (Using the file you uploaded)
-@st.cache_data  # This makes the app fast by saving data in memory
+# --- STEP 1: DEFINE THE LOADING FUNCTION ---
+@st.cache_data
 def load_data():
-    df = pd.read_csv("occupazione.csv")
-    return df
-st.sidebar.write("Actual Columns in CSV:", df.columns.tolist())
+    # We load the data here but don't 'use' it yet
+    data = pd.read_csv("occupazione.csv")
+    return data
 
+# --- STEP 2: ACTUALLY CREATE THE 'df' VARIABLE ---
+# This line MUST come before you try to use 'df.columns'
+df = load_data()
+
+# --- STEP 3: NOW USE THE DATA ---
+# Now 'df' exists, so this line will work!
+st.sidebar.write("Actual Columns in CSV:", df.columns.tolist())
 df = load_data()
 
 # 3. Sidebar Filters (The 'Controls')
