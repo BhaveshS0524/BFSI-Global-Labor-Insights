@@ -79,3 +79,24 @@ test_year = st.sidebar.number_input("Enter Year to test tool:", min_value=1991, 
 if st.sidebar.button("Run Tool"):
     message = get_employment_stats(test_country, test_year)
     st.sidebar.info(message)
+
+def get_employment_stats(country, year):
+    """
+    Finds the employment value for a specific country and year.
+    Updated with the exact column names from your CSV.
+    """
+    try:
+        # Convert year to string if necessary, as 'time' might be stored as text
+        year_str = str(year)
+        
+        # Filtering the dataframe
+        result = df[(df['ref_area'] == country) & (df['time'].astype(str) == year_str)]
+        
+        if not result.empty:
+            # We take the first match and get the 'obs_value' column
+            value = result['obs_value'].iloc[0]
+            return f"✅ SUCCESS: In {year}, the employment rate for {country} was {value}%."
+        else:
+            return f"❓ INFO: No data found for {country} in {year}. (Check if the country name is exactly as shown in the dropdown)."
+    except Exception as e:
+        return f"❌ ERROR: {e}"
