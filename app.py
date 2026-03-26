@@ -45,3 +45,29 @@ if change > 0:
     st.success(f"Employment is trending UP. It increased by {change:.2f}% compared to the previous period.")
 else:
     st.warning(f"Employment is trending DOWN by {abs(change):.2f}%. Action may be needed.")
+
+# This is a "Tool" that an AI Agent can call later
+def get_employment_stats(country, year):
+    """
+    Finds the employment value for a specific country and year.
+    This is what makes your app 'Agentic'.
+    """
+    try:
+        result = df[(df['ref_area'] == country) & (df['time'] == year)]
+        if not result.empty:
+            value = result['obs_value'].iloc[0]
+            return f"The employment rate for {country} in {year} was {value}%."
+        else:
+            return "Data not found for that specific selection."
+    except Exception as e:
+        return f"Error: {e}"
+
+# Test it in your sidebar to see if it works
+st.sidebar.divider()
+st.sidebar.subheader("🤖 Agent Tool Test")
+test_country = st.sidebar.text_input("Enter Country to test tool:")
+test_year = st.sidebar.number_input("Enter Year to test tool:", min_value=1991, max_value=2025, value=2022)
+
+if st.sidebar.button("Run Tool"):
+    message = get_employment_stats(test_country, test_year)
+    st.sidebar.info(message)
