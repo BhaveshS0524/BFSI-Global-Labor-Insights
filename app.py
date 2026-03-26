@@ -8,7 +8,7 @@ st.set_page_config(page_title="Global Employment AI", layout="wide")
 
 # --- STEP 1: AI SETUP (GEMINI) ---
 # Using the most stable model naming convention
-API_KEY = "AIzaSyALqZ9C5nEBBrKa8BP-aDwC-my3x3xUClI" 
+API_KEY = "AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc" 
 genai.configure(api_key=API_KEY)
 
 # SENIOR FIX: Changed from 'gemini-1.5-flash' to the most compatible version
