@@ -11,6 +11,7 @@ st.write("Analyze 30+ years of employment data instantly.")
 def load_data():
     df = pd.read_csv("occupazione.csv")
     return df
+st.sidebar.write("Actual Columns in CSV:", df.columns.tolist())
 
 df = load_data()
 
