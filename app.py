@@ -13,7 +13,7 @@ API_KEY = "AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc"
 try:
     genai.configure(api_key=API_KEY)
     # Using the most stable 2026 model version
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
 except Exception as e:
     st.error(f"AI Configuration Error: {e}")
 
