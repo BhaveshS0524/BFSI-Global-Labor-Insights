@@ -1,170 +1,126 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import google.generativeai as genai
 
-# 1. Page Configuration
-st.set_page_config(page_title="Global Employment Explorer", layout="wide")
-st.title("🌍 Global Employment Explorer")
-st.write("Analyze 30+ years of global employment data instantly.")
+# --- STEP 0: PAGE CONFIG ---
+st.set_page_config(page_title="BFSI AI Agent", layout="wide", page_icon="🤖")
 
-# --- STEP 0: PAGE CONFIGURATION ---
-st.set_page_config(page_title="BFSI Labor Insights AI", layout="wide", page_icon="📈")
+# --- STEP 1: RESILIENT AI SETUP (THE MODEL HUNTER) ---
+# 🔑 Replace with your key from: https://aistudio.google.com/
+API_KEY = "YOUR_API_KEY_HERE" 
+genai.configure(api_key=API_KEY)
 
-# --- STEP 1: LOAD & NORMALIZE DATA ---
+# We try multiple names to bypass the 404 error
+model_names = ['gemini-1.5-flash', 'models/gemini-1.5-flash', 'gemini-pro']
+model = None
+active_model_name = "None"
+
+for name in model_names:
+    try:
+        test_model = genai.GenerativeModel(name)
+        # Quick test to see if the model is reachable
+        test_model.generate_content("test", generation_config={"max_output_tokens": 1})
+        model = test_model
+        active_model_name = name
+        break # Exit the loop once we find a working model
+    except:
+        continue
+
+# --- STEP 2: DATA ENGINE ---
 @st.cache_data
 def load_data():
-    # Load the file
-    data = pd.read_csv("occupazione.csv")
-    
-    # SENIOR FIX: Clean column names (remove spaces and lowercase)
-    data.columns = data.columns.str.strip().str.lower()
-    
-    # MAPPING: We define which column to use for 'Country', 'Year', and 'Value'
-    # This avoids the KeyError by checking multiple possible names
-    column_mapping = {
-        'country_col': 'ref_area' if 'ref_area' in data.columns else ('country' if 'country' in data.columns else data.columns[1]),
-        'year_col': 'time' if 'time' in data.columns else ('year' if 'year' in data.columns else 'time'),
-        'value_col': 'obs_value' if 'obs_value' in data.columns else 'obs_value',
-        'sex_col': 'sex' if 'sex' in data.columns else ('gender' if 'gender' in data.columns else None)
-    }
-    
-    return data, column_mapping
+    try:
+        data = pd.read_csv("occupazione.csv")
+        data.columns = data.columns.str.strip().str.lower()
+        mapping = {
+            'country_col': 'ref_area' if 'ref_area' in data.columns else 'country',
+            'year_col': 'time' if 'time' in data.columns else 'year',
+            'value_col': 'obs_value',
+            'sex_col': 'sex' if 'sex' in data.columns else 'gender'
+        }
+        data = data.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+        return data, mapping
+    except Exception as e:
+        return None, None
 
-# Load data and get the mapping
 df, mapping = load_data()
 
-# --- STEP 2: SIDEBAR & FILTERS ---
-st.sidebar.header("Filter Data")
+# --- STEP 3: SIDEBAR & PERSONA ---
+st.sidebar.title("🎮 Agent Dashboard")
+if model:
+    st.sidebar.success(f"✅ AI Connected: {active_model_name}")
+else:
+    st.sidebar.error("❌ AI Connection Failed. Check API Key.")
 
-# Use the mapped column for country selection
-available_countries = sorted(df[mapping['country_col']].unique())
-selected_country = st.sidebar.selectbox("Select a Country", available_countries)
+agent_role = st.sidebar.selectbox("AI Persona", 
+    ["BFSI Data Analyst", "Economic Researcher", "Global Labor Consultant"])
 
-# Gender Selection (if the column exists)
-if mapping['sex_col']:
-    available_genders = df[mapping['sex_col']].unique().tolist()
-    selected_sex = st.sidebar.radio("Select Gender", available_genders)
+st.sidebar.divider()
+countries = sorted(df[mapping['country_col']].unique())
+selected_country = st.sidebar.selectbox("Select Country", countries)
+
+# Gender Logic
+if mapping['sex_col'] in df.columns:
+    genders = df[mapping['sex_col']].unique().tolist()
+    selected_sex = st.sidebar.radio("Gender Filter", genders)
     filtered_df = df[(df[mapping['country_col']] == selected_country) & (df[mapping['sex_col']] == selected_sex)]
 else:
     filtered_df = df[df[mapping['country_col']] == selected_country]
 
-# --- STEP 3: VISUALS ---
-st.subheader(f"Trend for {selected_country}")
+filtered_df = filtered_df.sort_values(by=mapping['year_col'])
 
-# Use the mapped columns for the chart
-fig = px.line(filtered_df, 
-              x=mapping['year_col'], 
-              y=mapping['value_col'], 
-              title=f"Employment Rate Over Time: {selected_country}")
-st.plotly_chart(fig, use_container_width=True)
+# --- STEP 4: VISUALS & METRICS ---
+st.title("📈 BFSI Global Labor Insights")
+st.write(f"Expert Analysis by: **{agent_role}**")
 
-# --- NEW: EXECUTIVE METRICS ROW ---
+if not filtered_df.empty:
+    m1, m2, m3 = st.columns(3)
+    latest = filtered_df[mapping['value_col']].iloc[-1]
+    prev = filtered_df[mapping['value_col']].iloc[-2] if len(filtered_df) > 1 else latest
+    
+    m1.metric("Current Rate", f"{latest}%", delta=f"{latest - prev:.2f}%")
+    m2.metric("All-Time High", f"{filtered_df[mapping['value_col']].max()}%")
+    m3.metric("All-Time Low", f"{filtered_df[mapping['value_col']].min()}%")
+
+    fig = px.line(filtered_df, x=mapping['year_col'], y=mapping['value_col'], 
+                  title=f"Trend: {selected_country}", markers=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- STEP 5: THE AI CHAT (CONTEXTUAL RAG) ---
 st.divider()
-col1, col2, col3 = st.columns(3)
+st.subheader(f"💬 Chat with {agent_role}")
 
-# 1. Highest Employment Rate in History
-max_val = filtered_df[mapping['value_col']].max()
-max_year = filtered_df[filtered_df[mapping['value_col']] == max_val][mapping['year_col']].iloc[0]
+user_query = st.chat_input("Ask a question about the data...")
 
-# 2. Lowest Employment Rate in History
-min_val = filtered_df[mapping['value_col']].min()
-min_year = filtered_df[filtered_df[mapping['value_col']] == min_val][mapping['year_col']].iloc[0]
+if user_query:
+    with st.chat_message("user"):
+        st.write(user_query)
 
-# 3. Current Rate vs Previous (Delta)
-latest_rate = filtered_df[mapping['value_col']].iloc[-1]
-prev_rate = filtered_df[mapping['value_col']].iloc[-2] if len(filtered_df) > 1 else latest_rate
-delta = latest_rate - prev_rate
-
-with col1:
-    st.metric(label="All-Time High", value=f"{max_val}%", help=f"Recorded in {max_year}")
-
-with col2:
-    st.metric(label="All-Time Low", value=f"{min_val}%", help=f"Recorded in {min_year}")
-
-with col3:
-    st.metric(label="Latest Change", value=f"{latest_rate}%", delta=f"{delta:.2f}%")
-
-# --- STEP 4: AUTOMATED AI INSIGHT ---
-st.divider()
-st.subheader("💡 Automated AI Insight")
-
-# Ensure we have enough data to compare
-if len(filtered_df) >= 2:
-    # Sort by year to ensure we compare the latest
-    filtered_df = filtered_df.sort_values(by=mapping['year_col'])
-    latest_val = filtered_df[mapping['value_col']].iloc[-1]
-    previous_val = filtered_df[mapping['value_col']].iloc[-2]
-    change = latest_val - previous_val
-
-    if change > 0:
-        st.success(f"Employment is trending UP. It increased by {change:.2f}% compared to the previous period.")
-    else:
-        st.warning(f"Employment is trending DOWN by {abs(change):.2f}%. Action may be needed.")
-else:
-    st.info("Not enough data points to calculate a trend.")
-
-# --- STEP 6: AGENT PERSONALITY SETTINGS ---
-st.sidebar.divider()
-st.sidebar.subheader("🧠 AI Agent Configuration")
-agent_role = st.sidebar.selectbox("Agent Persona", 
-    ["BFSI Data Analyst", "Economic Researcher", "Global Labor Consultant"])
-
-system_instructions = f"""
-You are an expert {agent_role}. 
-Your goal is to explain employment trends to users in Ahmedabad and across the globe.
-Always use the 'get_employment_stats' tool to verify facts before answering.
-"""
-st.sidebar.caption("System Instructions Loaded.")
-
-# --- STEP 5: THE AGENTIC TOOL (VERSION 2.0 - API READY) ---
-def get_employment_stats(country, year):
-    """
-    PROFESSIONAL TOOL: Fetches employment data for an AI Agent.
-    Handles case-sensitivity and provides structured dictionary feedback.
-    """
-    try:
-        # 1. Normalize Input (Strip spaces and capitalize for matching)
-        target_country = str(country).strip().title()
-        target_year = str(year).strip()
-        
-        # 2. Search using normalized columns
-        # We use .str.title() on the dataframe side to match our input
-        result = df[
-            (df[mapping['country_col']].str.title() == target_country) & 
-            (df[mapping['year_col']].astype(str) == target_year)
-        ]
-        
-        if not result.empty:
-            value = result[mapping['value_col']].iloc[0]
-            return {
-                "status": "success",
-                "data": value,
-                "message": f"✅ SUCCESS: In {target_year}, {target_country} had an employment rate of {value}%."
-            }
+    with st.chat_message("assistant"):
+        if model:
+            with st.spinner("Analyzing data..."):
+                # We feed the last 15 rows to the AI so it has the full context
+                data_summary = filtered_df.tail(15).to_string(index=False)
+                
+                prompt = f"""
+                ROLE: {agent_role}
+                COUNTRY: {selected_country}
+                DATA:
+                {data_summary}
+                
+                QUESTION: {user_query}
+                
+                INSTRUCTION: Use the DATA provided to answer the QUESTION professionally.
+                """
+                try:
+                    response = model.generate_content(prompt)
+                    st.write(response.text)
+                except Exception as e:
+                    st.error(f"Chat Error: {e}")
         else:
-            return {
-                "status": "not_found",
-                "message": f"❓ INFO: No data found for '{target_country}' in {target_year}."
-            }
-    except Exception as e:
-        return {"status": "error", "message": f"❌ ERROR: {str(e)}"}
+            st.warning("AI is not connected. Please check your API Key in the code.")
 
-# --- Updated Sidebar Test UI ---
-st.sidebar.divider()
-st.sidebar.subheader("🤖 Agent Tool Test (v2.0)")
-st.sidebar.caption("Type in lowercase (e.g. 'india') to test normalization.")
-
-test_input = st.sidebar.text_input("Country Search:", value="india")
-test_yr = st.sidebar.number_input("Year Search:", min_value=1991, max_value=2025, value=2021)
-
-if st.sidebar.button("Run Advanced Tool"):
-    response = get_employment_stats(test_input, test_yr)
-    if response["status"] == "success":
-        st.sidebar.success(response["message"])
-    else:
-        st.sidebar.warning(response["message"])
-
-# 6. Show Raw Data
-if st.checkbox("Show Raw Data Table"):
-    st.write(filtered_df)
-
+# --- STEP 6: DATA SOURCE ---
+if st.checkbox("Show Raw Data"):
+    st.dataframe(filtered_df)
