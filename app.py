@@ -55,6 +55,32 @@ fig = px.line(filtered_df,
               title=f"Employment Rate Over Time: {selected_country}")
 st.plotly_chart(fig, use_container_width=True)
 
+# --- NEW: EXECUTIVE METRICS ROW ---
+st.divider()
+col1, col2, col3 = st.columns(3)
+
+# 1. Highest Employment Rate in History
+max_val = filtered_df[mapping['value_col']].max()
+max_year = filtered_df[filtered_df[mapping['value_col']] == max_val][mapping['year_col']].iloc[0]
+
+# 2. Lowest Employment Rate in History
+min_val = filtered_df[mapping['value_col']].min()
+min_year = filtered_df[filtered_df[mapping['value_col']] == min_val][mapping['year_col']].iloc[0]
+
+# 3. Current Rate vs Previous (Delta)
+latest_rate = filtered_df[mapping['value_col']].iloc[-1]
+prev_rate = filtered_df[mapping['value_col']].iloc[-2] if len(filtered_df) > 1 else latest_rate
+delta = latest_rate - prev_rate
+
+with col1:
+    st.metric(label="All-Time High", value=f"{max_val}%", help=f"Recorded in {max_year}")
+
+with col2:
+    st.metric(label="All-Time Low", value=f"{min_val}%", help=f"Recorded in {min_year}")
+
+with col3:
+    st.metric(label="Latest Change", value=f"{latest_rate}%", delta=f"{delta:.2f}%")
+
 # --- STEP 4: AUTOMATED AI INSIGHT ---
 st.divider()
 st.subheader("💡 Automated AI Insight")
