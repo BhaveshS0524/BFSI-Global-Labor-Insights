@@ -7,11 +7,14 @@ import google.generativeai as genai
 st.set_page_config(page_title="Global Employment AI", layout="wide")
 
 # --- STEP 1: AI SETUP (GEMINI) ---
-# 🔑 Replace with the key you got from https://aistudio.google.com/
+# Using the most stable model naming convention
 API_KEY = "AIzaSyALqZ9C5nEBBrKa8BP-aDwC-my3x3xUClI" 
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
 
+# SENIOR FIX: Changed from 'gemini-1.5-flash' to the most compatible version
+model = genai.GenerativeModel('gemini-pro') 
+
+# Alternative if 'gemini-pro' fails: 'models/gemini-1.5-flash-latest'
 # --- STEP 2: LOAD & NORMALIZE DATA ---
 @st.cache_data
 def load_data():
