@@ -12,7 +12,7 @@ API_KEY = "AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc"
 genai.configure(api_key=API_KEY)
 
 # SENIOR FIX: Changed from 'gemini-1.5-flash' to the most compatible version
-model = genai.GenerativeModel('gemini-pro') 
+model = genai.GenerativeModel('gemini-1.5-flash') 
 
 # Alternative if 'gemini-pro' fails: 'models/gemini-1.5-flash-latest'
 # --- STEP 2: LOAD & NORMALIZE DATA ---
