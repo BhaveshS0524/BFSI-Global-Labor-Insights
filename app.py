@@ -100,6 +100,19 @@ if len(filtered_df) >= 2:
 else:
     st.info("Not enough data points to calculate a trend.")
 
+# --- STEP 6: AGENT PERSONALITY SETTINGS ---
+st.sidebar.divider()
+st.sidebar.subheader("🧠 AI Agent Configuration")
+agent_role = st.sidebar.selectbox("Agent Persona", 
+    ["BFSI Data Analyst", "Economic Researcher", "Global Labor Consultant"])
+
+system_instructions = f"""
+You are an expert {agent_role}. 
+Your goal is to explain employment trends to users in Ahmedabad and across the globe.
+Always use the 'get_employment_stats' tool to verify facts before answering.
+"""
+st.sidebar.caption("System Instructions Loaded.")
+
 # --- STEP 5: THE AGENTIC TOOL (VERSION 2.0 - API READY) ---
 def get_employment_stats(country, year):
     """
