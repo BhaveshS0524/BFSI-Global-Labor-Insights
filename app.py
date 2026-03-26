@@ -100,14 +100,14 @@ if len(filtered_df) >= 2:
 else:
     st.info("Not enough data points to calculate a trend.")
 
-# --- STEP 5: THE AGENTIC TOOL (VERSION 2.0) ---
+# --- STEP 5: THE AGENTIC TOOL (VERSION 2.0 - API READY) ---
 def get_employment_stats(country, year):
     """
     PROFESSIONAL TOOL: Fetches employment data for an AI Agent.
-    Handles case-sensitivity and provides descriptive feedback.
+    Handles case-sensitivity and provides structured dictionary feedback.
     """
     try:
-        # 1. Standardize Input (Strip spaces and capitalize for matching)
+        # 1. Normalize Input (Strip spaces and capitalize for matching)
         target_country = str(country).strip().title()
         target_year = str(year).strip()
         
@@ -119,35 +119,35 @@ def get_employment_stats(country, year):
         ]
         
         if not result.empty:
-            # We provide a data-rich sentence for the AI to 'read'
             value = result[mapping['value_col']].iloc[0]
             return {
                 "status": "success",
                 "data": value,
-                "message": f"In {target_year}, {target_country} had an employment rate of {value}%."
+                "message": f"✅ SUCCESS: In {target_year}, {target_country} had an employment rate of {value}%."
             }
         else:
-            # Helpful error for the AI Agent
             return {
                 "status": "not_found",
-                "message": f"I couldn't find data for {target_country} in {target_year}. Please check the spelling."
+                "message": f"❓ INFO: No data found for '{target_country}' in {target_year}."
             }
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"❌ ERROR: {str(e)}"}
 
-# --- Updated Sidebar Test ---
+# --- Updated Sidebar Test UI ---
 st.sidebar.divider()
 st.sidebar.subheader("🤖 Agent Tool Test (v2.0)")
-test_input = st.sidebar.text_input("Ask about a country (e.g. india):", value="india")
-test_yr = st.sidebar.number_input("Year:", min_value=1991, max_value=2025, value=2021)
+st.sidebar.caption("Type in lowercase (e.g. 'india') to test normalization.")
+
+test_input = st.sidebar.text_input("Country Search:", value="india")
+test_yr = st.sidebar.number_input("Year Search:", min_value=1991, max_value=2025, value=2021)
 
 if st.sidebar.button("Run Advanced Tool"):
-    # We call the function and extract the 'message' for the UI
     response = get_employment_stats(test_input, test_yr)
     if response["status"] == "success":
         st.sidebar.success(response["message"])
     else:
         st.sidebar.warning(response["message"])
+
 # 6. Show Raw Data
 if st.checkbox("Show Raw Data Table"):
     st.write(filtered_df)
