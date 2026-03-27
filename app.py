@@ -58,51 +58,55 @@ fig = px.line(filtered_df,
               title=f"Employment Rate Over Time: {selected_country}")
 st.plotly_chart(fig, use_container_width=True)
 
-# --- STRATEGIC REPORTING ENGINE ---
+# --- STRATEGIC REPORTING ENGINE (RESILIENT VERSION) ---
 st.markdown("---")
 st.subheader("📑 Automated Strategic Reporting")
 st.info("Click below to have the AI Agent analyze the current trends and generate a boardroom-ready report.")
 
 if st.button("🚀 Generate Executive Summary"):
-    with st.spinner(f"Analyzing {selected_country} BFSI data..."):
-        # 1. Prepare the Data context
-        latest_year = filtered_df['Year'].max()
-        latest_val = filtered_df[filtered_df['Year'] == latest_year]['Value'].iloc[0]
-        avg_val = filtered_df['Value'].mean()
-        min_val = filtered_df['Value'].min()
-        
-        # 2. The Professional Strategy Prompt
-        report_prompt = f"""
-        Act as a Senior BFSI Strategy Consultant. 
-        Analyze the following data for {selected_country}:
-        - Latest Year ({latest_year}) Value: {latest_val:.2f}
-        - Historical Average: {avg_val:.2f}
-        - Historical Minimum: {min_val:.2f}
-        
-        Write a professional 3-point Executive Summary:
-        1. TREND ANALYSIS: Describe the growth or decline trajectory.
-        2. BENCHMARKING: Compare the latest performance against the historical average.
-        3. STRATEGIC RECOMMENDATION: What should a BFSI CEO focus on for the next 12 months based on this data?
-        
-        Format: Use professional headings and bullet points. Keep it under 250 words.
-        """
-        
-        # 3. Execution
-        try:
+    # We use the column names we identified during the 'load_data' phase
+    # These are usually stored in your session or defined earlier in the script
+    # Make sure 'year_col' and 'val_col' are available here.
+    
+    try:
+        with st.spinner(f"Analyzing {selected_country} BFSI data..."):
+            # 1. Prepare Data using the DYNAMIC column names
+            # Using .get() or checking the actual column name avoids the KeyError
+            latest_year = filtered_df[year_col].max()
+            latest_val = filtered_df[filtered_df[year_col] == latest_year][val_col].iloc[0]
+            avg_val = filtered_df[val_col].mean()
+            min_val = filtered_df[val_col].min()
+            
+            # 2. The Professional Strategy Prompt
+            report_prompt = f"""
+            Act as a Senior BFSI Strategy Consultant. 
+            Analyze the following data for {selected_country}:
+            - Latest Year ({latest_year}) Value: {latest_val:.2f}
+            - Historical Average: {avg_val:.2f}
+            - Historical Minimum: {min_val:.2f}
+            
+            Write a professional 3-point Executive Summary:
+            1. TREND ANALYSIS: Describe the growth or decline trajectory.
+            2. BENCHMARKING: Compare the latest performance against the historical average.
+            3. STRATEGIC RECOMMENDATION: What should a BFSI CEO focus on for the next 12 months?
+            
+            Format: Use professional headings and bullet points. Keep it under 250 words.
+            """
+            
+            # 3. Execution
             response = model.generate_content(report_prompt)
             st.success("Report Generated Successfully!")
             st.markdown(f"## 📄 Executive Report: {selected_country}")
             st.write(response.text)
             
-            # The 'Senior' touch: Allow them to download the report
             st.download_button(
                 label="📥 Download This Report",
                 data=response.text,
                 file_name=f"BFSI_Report_{selected_country}.txt",
                 mime="text/plain"
             )
-        except Exception as e:
-            st.error(f"The Agent encountered a technical hurdle: {e}")
+    except Exception as e:
+        st.error(f"Technical Detail: Ensure columns '{year_col}' and '{val_col}' are correctly mapped. Error: {e}")
 
 # --- NEW: EXECUTIVE METRICS ROW ---
 st.divider()
