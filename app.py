@@ -73,3 +73,23 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Max Rate", f"{filtered_df['obs_value'].max()}%")
 col2.metric("Min Rate", f"{filtered_df['obs_value'].min()}%")
 col3.metric("Avg Rate", f"{filtered_df['obs_value'].mean():.2f}%")
+
+# --- Updated Sidebar Test UI ---
+st.sidebar.divider()
+st.sidebar.subheader("🤖 Agent Tool Test (v2.0)")
+st.sidebar.caption("Type in lowercase (e.g. 'india') to test normalization.")
+
+test_input = st.sidebar.text_input("Country Search:", value="india")
+test_yr = st.sidebar.number_input("Year Search:", min_value=1991, max_value=2025, value=2021)
+
+if st.sidebar.button("Run Advanced Tool"):
+    response = get_employment_stats(test_input, test_yr)
+    if response["status"] == "success":
+        st.sidebar.success(response["message"])
+    else:
+        st.sidebar.warning(response["message"])
+
+# 6. Show Raw Data
+if st.checkbox("Show Raw Data Table"):
+    st.write(filtered_df)
+
