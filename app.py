@@ -10,7 +10,7 @@ st.set_page_config(page_title="BFSI Labor Insights AI", layout="wide", page_icon
 # --- STEP 1: INITIALIZE AI MODEL ---
 # Replace 'YOUR_API_KEY' with your actual Google API Key or use secrets
 # For local testing: os.getenv("GOOGLE_API_KEY")
-google_api_key = st.sidebar.text_input("AIzaSyBcD8EwNxIC_88I_rVCCd9JZ7aGkQ6-QOc", type="password")
+google_api_key = st.sidebar.text_input("AIzaSyCDVlyGHNFDZll5v52LjBO4Xm3OljZAHHY", type="password")
 
 if google_api_key:
     genai.configure(api_key=google_api_key)
