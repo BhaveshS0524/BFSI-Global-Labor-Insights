@@ -7,16 +7,15 @@ import os
 # --- STEP 0: PAGE CONFIGURATION ---
 st.set_page_config(page_title="BFSI Labor Insights AI", layout="wide", page_icon="📈")
 
-# --- STEP 1: INITIALIZE AI MODEL ---
-# Replace 'YOUR_API_KEY' with your actual Google API Key or use secrets
-# For local testing: os.getenv("GOOGLE_API_KEY")
-google_api_key = st.sidebar.text_input("AIzaSyCDVlyGHNFDZll5v52LjBO4Xm3OljZAHHY", type="password")
-
-if google_api_key:
+# --- STEP 1: INITIALIZE AI MODEL (SECURE VERSION) ---
+# DO NOT paste your actual key here anymore!
+if "AIzaSyAX_QYMbMup5mD2BmMElOln5xbAwSuBPSA" in st.secrets:
+    google_api_key = st.secrets["AIzaSyAX_QYMbMup5mD2BmMElOln5xbAwSuBPSA"]
     genai.configure(api_key=google_api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
 else:
-    st.warning("Please enter your Google API Key in the sidebar to enable AI Reporting.")
+    st.error("Missing API Key. Please add 'GOOGLE_API_KEY' to Streamlit Secrets.")
+    st.stop() # Stops the app from running without the key
 
 # --- STEP 2: LOAD & NORMALIZE DATA ---
 @st.cache_data
