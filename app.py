@@ -12,7 +12,7 @@ st.set_page_config(page_title="BFSI Labor Insights AI", layout="wide", page_icon
 if "GOOGLE_API_KEY" in st.secrets:
     google_api_key = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=google_api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 else:
     st.error("Missing API Key. Please add 'GOOGLE_API_KEY' to Streamlit Secrets.")
     st.stop() # Stops the app from running without the key
