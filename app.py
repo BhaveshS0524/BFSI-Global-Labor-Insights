@@ -58,48 +58,56 @@ fig = px.line(filtered_df,
               title=f"Employment Rate Over Time: {selected_country}")
 st.plotly_chart(fig, use_container_width=True)
 
-# --- STRATEGIC REPORTING ENGINE (MAPPED VERSION) ---
+# --- STRATEGIC REPORTING ENGINE (UNIVERSAL VERSION) ---
 st.markdown("---")
 st.subheader("📑 Automated Strategic Reporting")
-st.info("The AI Agent will analyze the specific trends for your current selection.")
 
 if st.button("🚀 Generate Executive Summary"):
     try:
         with st.spinner(f"Analyzing {selected_country} BFSI data..."):
-            # 1. Use the EXACT columns from your load_data function
-            # Your app uses 'time' for Year and 'obs_value' for Value
-            latest_year = filtered_df['time'].max()
-            latest_val = filtered_df[filtered_df['time'] == latest_year]['obs_value'].iloc[0]
-            avg_val = filtered_df['obs_value'].mean()
+            # 1. AUTO-DETECT COLUMNS (The 'Senior' way)
+            # Find the year column (usually 'time' or 'Year' or the first column)
+            # Find the value column (usually 'obs_value' or 'Value' or the last column)
+            cols = filtered_df.columns.tolist()
+            
+            # Logic: 'time' is usually your year, 'obs_value' is your data
+            y_col = 'time' if 'time' in cols else cols[0]
+            v_col = 'obs_value' if 'obs_value' in cols else cols[-1]
+            
+            latest_year = filtered_df[y_col].max()
+            latest_val = filtered_df[filtered_df[y_col] == latest_year][v_col].iloc[0]
+            avg_val = filtered_df[v_col].mean()
             
             # 2. The Professional Strategy Prompt
             report_prompt = f"""
             Act as a Senior BFSI Strategy Consultant. 
             Analyze the following data for {selected_country}:
+            - Metric: {selected_indicator}
             - Latest Recorded Year ({latest_year}) Value: {latest_val:.2f}
             - Historical Average: {avg_val:.2f}
             
             Write a professional 3-point Executive Summary:
             1. TREND ANALYSIS: Describe the growth or decline trajectory.
             2. BENCHMARKING: Compare the latest performance against the historical average.
-            3. STRATEGIC RECOMMENDATION: Based on this trend, what should a BFSI CEO focus on?
+            3. STRATEGIC RECOMMENDATION: What should a BFSI CEO focus on based on this?
             
             Format: Use professional headings and bullet points.
             """
             
-            # 3. Execution using your existing Gemini 'model'
+            # 3. Execution
             response = model.generate_content(report_prompt)
             st.success("Report Generated!")
             st.markdown(f"### 📄 Executive Report: {selected_country}")
             st.write(response.text)
             
             st.download_button(
-                label="📥 Download This Report",
+                label="📥 Download Report",
                 data=response.text,
                 file_name=f"BFSI_Report_{selected_country}.txt"
             )
     except Exception as e:
-        st.error(f"Mapping Error: Please ensure columns 'time' and 'obs_value' are present. Details: {e}")
+        # This will tell us EXACTLY what the columns are if it fails
+        st.error(f"Technical Trace: I found these columns: {filtered_df.columns.tolist()}. Error: {e}")
 
 # --- NEW: EXECUTIVE METRICS ROW ---
 st.divider()
