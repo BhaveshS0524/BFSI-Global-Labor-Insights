@@ -58,43 +58,39 @@ fig = px.line(filtered_df,
               title=f"Employment Rate Over Time: {selected_country}")
 st.plotly_chart(fig, use_container_width=True)
 
-# --- STRATEGIC REPORTING ENGINE (UNIVERSAL VERSION) ---
+# --- STRATEGIC REPORTING ENGINE (CALIBRATED) ---
 st.markdown("---")
 st.subheader("📑 Automated Strategic Reporting")
 
 if st.button("🚀 Generate Executive Summary"):
     try:
         with st.spinner(f"Analyzing {selected_country} BFSI data..."):
-            # 1. AUTO-DETECT COLUMNS (The 'Senior' way)
-            # Find the year column (usually 'time' or 'Year' or the first column)
-            # Find the value column (usually 'obs_value' or 'Value' or the last column)
-            cols = filtered_df.columns.tolist()
-            
-            # Logic: 'time' is usually your year, 'obs_value' is your data
-            y_col = 'time' if 'time' in cols else cols[0]
-            v_col = 'obs_value' if 'obs_value' in cols else cols[-1]
+            # 1. Using the EXACT columns found in your Technical Trace
+            y_col = 'year'
+            v_col = 'obs_value'
             
             latest_year = filtered_df[y_col].max()
             latest_val = filtered_df[filtered_df[y_col] == latest_year][v_col].iloc[0]
             avg_val = filtered_df[v_col].mean()
             
             # 2. The Professional Strategy Prompt
+            # We removed 'selected_indicator' to prevent the name error
             report_prompt = f"""
             Act as a Senior BFSI Strategy Consultant. 
             Analyze the following data for {selected_country}:
-            - Metric: {selected_indicator}
+            - Data Point: BFSI Labor Insights
             - Latest Recorded Year ({latest_year}) Value: {latest_val:.2f}
             - Historical Average: {avg_val:.2f}
             
             Write a professional 3-point Executive Summary:
-            1. TREND ANALYSIS: Describe the growth or decline trajectory.
+            1. TREND ANALYSIS: Describe the growth or decline trajectory based on these numbers.
             2. BENCHMARKING: Compare the latest performance against the historical average.
-            3. STRATEGIC RECOMMENDATION: What should a BFSI CEO focus on based on this?
+            3. STRATEGIC RECOMMENDATION: What should a BFSI CEO focus on for the next 12 months?
             
-            Format: Use professional headings and bullet points.
+            Format: Use professional headings and bullet points. Keep it under 200 words.
             """
             
-            # 3. Execution
+            # 3. Execution using your Gemini model
             response = model.generate_content(report_prompt)
             st.success("Report Generated!")
             st.markdown(f"### 📄 Executive Report: {selected_country}")
@@ -106,8 +102,7 @@ if st.button("🚀 Generate Executive Summary"):
                 file_name=f"BFSI_Report_{selected_country}.txt"
             )
     except Exception as e:
-        # This will tell us EXACTLY what the columns are if it fails
-        st.error(f"Technical Trace: I found these columns: {filtered_df.columns.tolist()}. Error: {e}")
+        st.error(f"Technical Detail: Please check if 'model' is initialized. Error: {e}")
 
 # --- NEW: EXECUTIVE METRICS ROW ---
 st.divider()
