@@ -1,6 +1,6 @@
 # 🌍 BFSI Global Labor Insights AI Agent
 
-### 🚀 Live Demo: [Paste your Streamlit Link here]
+### 🚀 Live Demo: [[Paste your Streamlit Link here](https://bfsi-global-labor-insightsgit-clylo5vyrgstur5g2sw6ba.streamlit.app/)]
 
 ## 📌 Project Overview
 This project is a **Strategic Decision-Support Tool** designed for the Banking, Financial Services, and Insurance (BFSI) sector. It transforms macro-economic labor data into actionable executive insights using **Agentic AI**.
