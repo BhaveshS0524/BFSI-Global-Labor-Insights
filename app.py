@@ -93,3 +93,7 @@ if st.sidebar.button("Run Advanced Tool"):
 if st.checkbox("Show Raw Data Table"):
     st.write(filtered_df)
 
+# Sidebar Footer
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 👨‍💼 Bhavesh Suryavanshi")
+st.sidebar.markdown("*AI Solutions Architect | Data Strategist*")
