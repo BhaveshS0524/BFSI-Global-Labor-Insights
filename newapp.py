@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -80,10 +81,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @st.cache_data
 def load_data():
-    unemp = pd.read_csv("disoccupazione.csv")
-    emp   = pd.read_csv("occupazione.csv")
+    unemp = pd.read_csv(os.path.join(BASE_DIR, "disoccupazione.csv"))
+    emp   = pd.read_csv(os.path.join(BASE_DIR, "occupazione.csv"))
     unemp.rename(columns={"obs_value": "unemployment_rate"}, inplace=True)
     emp.rename(columns={"obs_value": "employment_rate"},   inplace=True)
     merged = pd.merge(unemp, emp, on=["iso_code","country","sex","age","year"], how="outer")
@@ -102,12 +105,15 @@ with st.sidebar:
 
     st.markdown("### 🔍 Smart Filters")
 
+    _wanted = ["United States of America", "United States", "Germany",
+               "India", "Brazil", "China"]
+    _defaults = [c for c in _wanted if c in all_countries] or list(all_countries[:5])
+
     selected_countries = st.multiselect(
-        "Countries", all_countries,
-        default=["United States", "Germany", "India", "Brazil", "China"]
+        "Countries", all_countries, default=_defaults
     )
     if not selected_countries:
-        selected_countries = all_countries[:5]
+        selected_countries = list(all_countries[:5])
 
     year_range = st.slider("Year Range", min_year, max_year, (2005, max_year))
 
