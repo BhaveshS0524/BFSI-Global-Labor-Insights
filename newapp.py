@@ -143,6 +143,8 @@ with st.sidebar:
 
     st.markdown("---")
     st.caption("Data: ILO Global Labour Statistics")
+    st.caption("Developer: Bhavesh Suryavanshi")
+
 
 # ── Filter data ───────────────────────────────────────────────────────────────
 @st.cache_data
@@ -652,7 +654,7 @@ with tab5:
             with st.spinner("🤖 Analysing data…"):
                 try:
                     genai.configure(api_key=gemini_key)
-                    model = genai.GenerativeModel("gemini-1.5-flash")
+                    model = genai.GenerativeModel("gemini-2.5-flash")
 
                     system_prompt = f"""You are an expert labour market analyst with deep knowledge of
 global employment and unemployment statistics. You have access to the following
