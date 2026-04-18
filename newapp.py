@@ -143,8 +143,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.caption("Data: ILO Global Labour Statistics")
-    st.caption("Developer: Bhavesh Suryavanshi")
-
 
 # ── Filter data ───────────────────────────────────────────────────────────────
 @st.cache_data
@@ -543,70 +541,81 @@ with tab5:
     if not gemini_key:
         st.warning("⚠️ Please enter your Gemini API key in the sidebar to activate the AI agent.")
     else:
-        # Build concise data context for the model
+        # Build rich data context for the model
         @st.cache_data
-        def build_context():
-            # Latest year global snapshot
+        def build_context(sel_countries):
+            max_yr = int(merged_df["year"].max())
+            min_yr = int(merged_df["year"].min())
+
+            # ── Global snapshot (latest year, all countries) ──────────────
             latest_g = merged_df[
-                (merged_df["year"] == merged_df["year"].max()) &
+                (merged_df["year"] == max_yr) &
                 (merged_df["sex"] == "Total") & (merged_df["age"] == "15+")
             ][["country","unemployment_rate","employment_rate"]].dropna()
 
-            top5_u  = latest_g.nlargest(5,"unemployment_rate")[["country","unemployment_rate"]].to_dict("records")
-            bot5_u  = latest_g.nsmallest(5,"unemployment_rate")[["country","unemployment_rate"]].to_dict("records")
-            top5_e  = latest_g.nlargest(5,"employment_rate")[["country","employment_rate"]].to_dict("records")
+            top10_u = latest_g.nlargest(10,"unemployment_rate").round(2).to_dict("records")
+            bot10_u = latest_g.nsmallest(10,"unemployment_rate").round(2).to_dict("records")
+            top10_e = latest_g.nlargest(10,"employment_rate").round(2).to_dict("records")
 
-            # Global averages by year
+            # ── Global averages by year (all years, all age groups) ───────
             global_avg = merged_df[
-                (merged_df["sex"] == "Total") & (merged_df["age"] == "15+")
-            ].groupby("year")[["unemployment_rate","employment_rate"]].mean().round(2).reset_index()
+                merged_df["sex"] == "Total"
+            ].groupby(["year","age"])[["unemployment_rate","employment_rate"]].mean().round(2).reset_index()
             global_avg_dict = global_avg.to_dict("records")
 
-            # Gender gap latest
-            gen_latest = merged_df[
-                (merged_df["year"] == merged_df["year"].max()) &
-                (merged_df["age"] == "15+") &
-                (merged_df["sex"].isin(["Male","Female"]))
-            ].groupby("sex")[["unemployment_rate","employment_rate"]].mean().round(2).to_dict()
-
-            # Youth vs adult
-            age_latest = merged_df[
-                (merged_df["year"] == merged_df["year"].max()) &
+            # ── Youth unemployment top 20 per year (2010 onwards) ─────────
+            youth_by_year = merged_df[
                 (merged_df["sex"] == "Total") &
-                (merged_df["age"].isin(["15-24","25+"]))
-            ].groupby("age")[["unemployment_rate"]].mean().round(2).to_dict()
+                (merged_df["age"] == "15-24") &
+                (merged_df["year"] >= 2010)
+            ][["country","year","unemployment_rate"]].dropna()
+            youth_top20_per_year = (
+                youth_by_year
+                .sort_values(["year","unemployment_rate"], ascending=[True, False])
+                .groupby("year")
+                .head(20)
+                .round(2)
+                .to_dict("records")
+            )
+
+            # ── Gender gap by year (global average) ───────────────────────
+            gender_trend = merged_df[
+                (merged_df["sex"].isin(["Male","Female"])) &
+                (merged_df["age"] == "15+")
+            ].groupby(["year","sex"])[["unemployment_rate","employment_rate"]].mean().round(2).reset_index()
+            gender_trend_dict = gender_trend.to_dict("records")
+
+            # ── Per-country full breakdown (ALL years, ALL sex, ALL age) ──
+            country_full = {}
+            for c in sel_countries:
+                cdf = merged_df[merged_df["country"] == c].copy()
+                cdf = cdf.sort_values(["year","sex","age"])
+                country_full[c] = cdf[["year","sex","age","unemployment_rate","employment_rate"]].round(2).to_dict("records")
+
+            # ── All countries, latest year, all breakdowns ─────────────────
+            all_latest = merged_df[
+                merged_df["year"] == max_yr
+            ][["country","sex","age","unemployment_rate","employment_rate"]].dropna().round(2).to_dict("records")
 
             ctx = {
                 "dataset_description": (
-                    "ILO Global Labour Market dataset covering unemployment and employment rates "
-                    f"for {merged_df['country'].nunique()} countries, years {int(merged_df['year'].min())}"
-                    f"–{int(merged_df['year'].max())}, broken down by sex (Total/Male/Female) "
-                    "and age group (15+, 15-24, 25+)."
+                    f"ILO Global Labour Market dataset. {merged_df['country'].nunique()} countries, "
+                    f"years {min_yr}–{max_yr}. Metrics: unemployment_rate, employment_rate. "
+                    "Dimensions: sex (Total/Male/Female), age (15+, 15-24, 25+)."
                 ),
-                "latest_year": int(merged_df["year"].max()),
-                "top5_highest_unemployment": top5_u,
-                "top5_lowest_unemployment":  bot5_u,
-                "top5_highest_employment":   top5_e,
-                "global_averages_by_year": global_avg_dict[-10:],  # last 10 years
-                "gender_breakdown_latest": gen_latest,
-                "youth_vs_adult_unemployment_latest": age_latest,
-                "currently_filtered_countries": selected_countries,
+                "latest_year": max_yr,
+                "top10_highest_unemployment_latest": top10_u,
+                "top10_lowest_unemployment_latest":  bot10_u,
+                "top10_highest_employment_latest":   top10_e,
+                "global_averages_by_year_and_age_group": global_avg_dict,
+                "youth_unemployment_top20_per_year_since_2010": youth_top20_per_year,
+                "gender_gap_global_trend_by_year": gender_trend_dict,
+                "all_countries_latest_year_full_breakdown": all_latest,
+                "selected_countries_full_history": country_full,
             }
+            return json.dumps(ctx)
 
-            # Per-country stats for selected countries
-            country_stats = {}
-            for c in selected_countries:
-                cdf = merged_df[
-                    (merged_df["country"] == c) &
-                    (merged_df["sex"] == "Total") &
-                    (merged_df["age"] == "15+")
-                ].sort_values("year")[["year","unemployment_rate","employment_rate"]]
-                country_stats[c] = cdf.tail(10).round(2).to_dict("records")
-            ctx["selected_country_recent_stats"] = country_stats
-
-            return json.dumps(ctx, indent=2)
-
-        data_context = build_context()
+        data_context = build_context(tuple(selected_countries))
 
         # Chat history
         if "chat_history" not in st.session_state:
@@ -654,7 +663,7 @@ with tab5:
             with st.spinner("🤖 Analysing data…"):
                 try:
                     genai.configure(api_key=gemini_key)
-                    model = genai.GenerativeModel("gemini-2.5-flash")
+                    model = genai.GenerativeModel("gemini-2.0-flash")
 
                     system_prompt = f"""You are an expert labour market analyst with deep knowledge of
 global employment and unemployment statistics. You have access to the following
