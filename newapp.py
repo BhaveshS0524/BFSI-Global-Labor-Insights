@@ -131,9 +131,15 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 🤖 Gemini AI Agent")
-    gemini_key = st.text_input("Gemini API Key", type="password",
-                               placeholder="AIza...")
-    st.caption("Get a free key at [ai.google.dev](https://ai.google.dev)")
+    # Read from Streamlit secrets first, fall back to manual input
+    _secret_key = st.secrets.get("GEMINI_API_KEY", "") if hasattr(st, "secrets") else ""
+    if _secret_key:
+        gemini_key = _secret_key
+        st.success("Gemini key loaded from secrets")
+    else:
+        gemini_key = st.text_input("Gemini API Key", type="password",
+                                   placeholder="AIza...")
+        st.caption("Get a free key at [ai.google.dev](https://ai.google.dev)")
 
     st.markdown("---")
     st.caption("Data: ILO Global Labour Statistics")
